@@ -1,0 +1,9 @@
+[package]
+name = "telebox"
+version = "0.1.0"
+authors = ["weaming <garden.yuen@gmail.com>"]
+
+[dependencies]
+telegram-bot = "0.6"
+futures = "^0.1.18"
+tokio-core = "^0.1.12"
