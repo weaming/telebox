@@ -31,12 +31,12 @@ fn inbox(tx: Sender<String>) {
 }
 
 struct Chat {
-    id: u32,
+    id: String,
     token: String,
 }
 
 impl Chat {
-    pub fn new(id: u32, token: String) -> Chat {
+    pub fn new(id: String, token: String) -> Chat {
         Chat {
             id,
             token
@@ -44,7 +44,7 @@ impl Chat {
     }
 
     pub fn send_message(&self, text: String) {
-        let params = [("chat_id", &format!("{}", self.id)), ("text", &text)];
+        let params = [("chat_id", &self.id), ("text", &text)];
         let client = reqwest::Client::new();
         let res = client.post(&*format!("https://api.telegram.org/bot{}/sendMessage", self.token))
             .form(&params)
@@ -56,7 +56,8 @@ fn bot(rx: Receiver<String>) {
     loop {
         let msg = rx.recv().unwrap();
         let token = env::var("TELEGRAM_BOT_TOKEN").unwrap();
-        let chat = Chat::new(142664361, token);
+        let myid = env::var("TELEGRAM_CHAT_ID").unwrap();
+        let chat = Chat::new(myid, token);
         chat.send_message(msg);
     }
 }
