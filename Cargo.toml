@@ -4,5 +4,11 @@ version = "0.1.0"
 authors = ["weaming <garden.yuen@gmail.com>"]
 
 [dependencies]
-hyper = "0.10.13"
-reqwest = "0.8.4"
+reqwest = "0.8.5"
+hyper = "0.10.13" # 0.10.x
+
+telegram-bot = "^0.6.1"
+tokio-core = "^0.1.12"
+futures = "^0.1.*"
+
+

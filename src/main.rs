@@ -9,6 +9,8 @@ use std::sync::mpsc::{channel, Sender, Receiver};
 
 use hyper::server::{Handler, Server, Request, Response};
 
+mod echo;
+
 struct Inbox{
     inbox: Mutex<Sender<String>>
 }
@@ -24,7 +26,8 @@ impl Handler for Inbox {
 }
 
 fn inbox(tx: Sender<String>) {
-    Server::http("0.0.0.0:12345").unwrap().handle(Inbox {
+    let port = env::var("PORT").unwrap_or("12345".to_string());
+    Server::http(format!("0.0.0.0:{}", port)).unwrap().handle(Inbox {
         inbox: Mutex::new(tx)
     }).unwrap();
 
@@ -46,18 +49,18 @@ impl Chat {
     pub fn send_message(&self, text: String) {
         let params = [("chat_id", &self.id), ("text", &text)];
         let client = reqwest::Client::new();
-        let res = client.post(&*format!("https://api.telegram.org/bot{}/sendMessage", self.token))
+        let _res = client.post(&*format!("https://api.telegram.org/bot{}/sendMessage", self.token))
             .form(&params)
             .send();
     }
 }
 
 fn bot(rx: Receiver<String>) {
+    let token = env::var("TELEGRAM_BOT_TOKEN").expect("missing TELEGRAM_BOT_TOKEN");
+    let myid = env::var("TELEGRAM_CHAT_ID").expect("missing TELEGRAM_CHAT_ID");
+    let chat = Chat::new(myid, token);
     loop {
         let msg = rx.recv().unwrap();
-        let token = env::var("TELEGRAM_BOT_TOKEN").unwrap();
-        let myid = env::var("TELEGRAM_CHAT_ID").unwrap();
-        let chat = Chat::new(myid, token);
         chat.send_message(msg);
     }
 }
@@ -73,8 +76,14 @@ fn main() {
     let child2 = thread::spawn(move || {
         bot(rx);
     });
-    println!("started bot");
+    println!("started redirect bot");
+
+    let child3 = thread::spawn(move || {
+        echo::robot();
+    });
+    println!("started telegram bot");
 
     child1.join().unwrap();
     child2.join().unwrap();
+    child3.join().unwrap();
 }
